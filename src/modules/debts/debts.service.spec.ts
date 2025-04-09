@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DebtsService } from './debts.service';
 import { getModelToken } from '@nestjs/mongoose';
 import { Debt } from './schemas/debts.model';
-import { HttpException } from '@nestjs/common';
+import { HttpException, NotFoundException } from '@nestjs/common';
 import { CreateDebtDto, DebtStatus, DebtType } from './dto/create-debt.dto';
 import { Model } from 'mongoose';
 
@@ -12,6 +12,7 @@ describe('DebtsService', () => {
 
   const mockSave = jest.fn();
   const mockFind = jest.fn();
+  const mockFindOne = jest.fn(); // Adicionado
 
   const mockDebtData = {
     _id: 'mockedId',
@@ -27,16 +28,19 @@ describe('DebtsService', () => {
   };
 
   beforeEach(async () => {
-    // Cria um mock do model com os métodos esperados
+    // Mock do model com os métodos necessários
     const mockDebtModel: Partial<jest.Mocked<Model<Debt>>> = {
       find: mockFind,
+      findOne: mockFindOne, // Corrigido aqui
     };
 
+    // Mock do construtor para simular save()
     const mockConstructor = jest.fn().mockImplementation((dto) => ({
       ...dto,
       save: mockSave,
     }));
 
+    // Montagem do módulo de teste
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DebtsService,
@@ -50,6 +54,7 @@ describe('DebtsService', () => {
     service = module.get<DebtsService>(DebtsService);
     debtModel = module.get(getModelToken(Debt.name));
   });
+
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -358,6 +363,67 @@ describe('DebtsService', () => {
     });
   });
 
+  describe('simulatePaymentProjection', () => {
+    it('deve retornar a quantidade de meses e o valor restante como 0', async () => {
+      // Arrange
+      mockFindOne.mockResolvedValueOnce({
+        ...mockDebtData,
+        currentAmount: 1000,
+        interestRate: 2,
+      });
 
+      const userId = 'user123';
+      const debtId = 'mockedId';
+      const newPaymentAmount = 300;
+      const newInterestRate = 2;
 
+      // Act
+      const result = await service.simulatePaymentProjection(userId, debtId, newPaymentAmount, newInterestRate);
+
+      // Assert
+      expect(result.monthsToPay).toBeGreaterThan(0);
+      expect(result.remainingAmount).toBe(0);
+      expect(mockFindOne).toHaveBeenCalledWith({ userId, _id: debtId });
+    });
+    it('deve lançar exceção se a dívida não for encontrada', async () => {
+      // Arrange
+      mockFindOne.mockResolvedValueOnce(null); // dívida não encontrada
+
+      const userId = 'user123';
+      const debtId = 'invalidId';
+      const newPaymentAmount = 300;
+      const newInterestRate = 2;
+
+      // Act & Assert
+      await expect(
+        service.simulatePaymentProjection(userId, debtId, newPaymentAmount, newInterestRate),
+      ).rejects.toThrowError('Dívida não encontrada');
+
+      expect(mockFindOne).toHaveBeenCalledWith({ userId, _id: debtId });
+    });
+    it('deve retornar projeção correta com pagamento suficiente', async () => {
+      const dynamicDebt = { ...mockDebtData };
+    
+      mockFindOne.mockImplementation(async () => {
+        return dynamicDebt;
+      });
+    
+      const userId = 'user123';
+      const debtId = 'mockedId';
+      const newPaymentAmount = 150; // Suficiente para cobrir os juros
+      const newInterestRate = 2;
+    
+      const result = await service.simulatePaymentProjection(userId, debtId, newPaymentAmount, newInterestRate);
+    
+      expect(result).toHaveProperty('monthsToPay');
+      expect(result).toHaveProperty('remainingAmount');
+      
+      expect(result.remainingAmount).toBe(0);
+    });
+    
+    
+    
+
+  });
+  
 });
