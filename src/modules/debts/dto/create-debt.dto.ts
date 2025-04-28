@@ -8,9 +8,11 @@ export enum DebtStatus {
 }
 
 export enum DebtType {
-    LOAN = 'loan',
-    CREDIT_CARD = 'creditCard',
-}
+    LOAN = 'LOAN',
+    CREDIT_CARD = 'CREDIT_CARD',
+    PERSONAL = 'PERSONAL',
+  }
+  
 
 export class CreateDebtDto {
     @ApiProperty({ example: 1000, description: 'Valor original da dívida', minimum: 0 })
@@ -53,7 +55,7 @@ export class CreateDebtDto {
 
     @ApiProperty({ example: DebtType.CREDIT_CARD, enum: DebtType, description: 'Tipo da dívida', required: false })
     @IsOptional()
-    @IsEnum(DebtType, { message: 'Tipo de dívida deve ser "loan" ou "creditCard"' })
+    @IsEnum(DebtType, { message: 'Tipo de dívida deve ser "LOAN", "CREDIT_CARD" ou "PERSONAL"' })
     debtType?: DebtType;
 
 }

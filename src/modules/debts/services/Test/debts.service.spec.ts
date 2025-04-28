@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DebtsService } from './debts.service';
+import { DebtsService } from './../debts.service';
 import { getModelToken } from '@nestjs/mongoose';
-import { Debt } from './schemas/debts.model';
+import { Debt, DebtDocument } from '../../schemas/debts.model';
 import { HttpException, NotFoundException } from '@nestjs/common';
-import { CreateDebtDto, DebtStatus, DebtType } from './dto/create-debt.dto';
+import { CreateDebtDto, DebtStatus, DebtType } from '../../dto/create-debt.dto';
 import { Model } from 'mongoose';
 
 describe('DebtsService', () => {
@@ -26,6 +26,7 @@ describe('DebtsService', () => {
     status: DebtStatus.PENDING,
     debtType: 'credit',
   };
+
 
   beforeEach(async () => {
     // Mock do model com os métodos necessários
@@ -96,6 +97,7 @@ describe('DebtsService', () => {
       await expect(service.createDebt('user123', createDto)).rejects.toThrow(HttpException);
     });
   });
+
 
   describe('listDebts', () => {
     it('deve retornar todas as dívidas do usuário sem filtro de status', async () => {
@@ -403,27 +405,23 @@ describe('DebtsService', () => {
     });
     it('deve retornar projeção correta com pagamento suficiente', async () => {
       const dynamicDebt = { ...mockDebtData };
-    
+
       mockFindOne.mockImplementation(async () => {
         return dynamicDebt;
       });
-    
+
       const userId = 'user123';
       const debtId = 'mockedId';
       const newPaymentAmount = 150; // Suficiente para cobrir os juros
       const newInterestRate = 2;
-    
+
       const result = await service.simulatePaymentProjection(userId, debtId, newPaymentAmount, newInterestRate);
-    
+
       expect(result).toHaveProperty('monthsToPay');
       expect(result).toHaveProperty('remainingAmount');
-      
+
       expect(result.remainingAmount).toBe(0);
     });
-    
-    
-    
 
   });
-  
 });

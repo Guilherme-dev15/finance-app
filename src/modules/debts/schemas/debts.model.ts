@@ -31,6 +31,10 @@ export class Debt extends Document {
 
     @Prop({ default: Date.now })
     createdAt: Date;
+
+    @Prop({ required: false })
+    totalAmount: number;  // Adicionando o campo totalAmount
 }
 
 export const DebtSchema = SchemaFactory.createForClass(Debt); 
+export type DebtDocument = Debt & Document;

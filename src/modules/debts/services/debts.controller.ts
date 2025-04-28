@@ -1,12 +1,12 @@
 import { Controller, Post, Get, Body, Request, UseGuards, Put, Param, Delete, HttpException, HttpStatus, Query, Patch } from '@nestjs/common';
 import { DebtsService } from './debts.service';
 import { AuthGuard } from '@nestjs/passport';
-import { CreateDebtDto } from './dto/create-debt.dto';
+import { CreateDebtDto } from '../dto/create-debt.dto';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
-import { PayDebtDto } from '../debts/dto/pay.debt.dto'
-import { JwtAuthGuard } from './guards/user.guard';
+import { PayDebtDto } from '../dto/pay.debt.dto'
 import { Logger } from '@nestjs/common';  // Importe o Logger
-import { SimulatePaymentDto } from './dto/simulate-payment.dto';
+import { SimulatePaymentDto } from '../dto/simulate-payment.dto';
+import { DebtAssistantService } from './debts.assistant.service';
 
 // Função auxiliar para validar o userId
 function validateUserId(req: any): string {
@@ -24,7 +24,10 @@ function validateUserId(req: any): string {
 
 export class DebtsController {
     private readonly logger = new Logger(DebtsController.name);
-    constructor(private readonly debtsService: DebtsService) { }
+    constructor(
+        private readonly debtsService: DebtsService,
+        private readonly debtAssistantService: DebtAssistantService,
+    ) { }
 
     @Post()
     @ApiOperation({ summary: 'Criar uma nova dívida' })
@@ -226,5 +229,17 @@ export class DebtsController {
         } catch (error) {
             throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+    @Get('assistente/analisar')
+    async analisarDividas(@Query('userId') userId: string, @Query('renda') renda: number) {
+        return this.debtAssistantService.analyzeDebts(userId, renda);
+    }
+    
+    @Get('analyze')
+    analyzeDebts(
+        @Query('userId') userId: string,
+        @Query('amount') amount: string
+    ){
+        return this.debtAssistantService.analyzeDebts(userId, parseFloat(amount));
     }
 }

@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DebtsService } from './debts.service';
-import { Debt } from './schemas/debts.model';
+import { DebtsService } from '.././debts.service';
+import { Debt } from '../../schemas/debts.model';
 import { Model } from 'mongoose';
 import { getModelToken } from '@nestjs/mongoose';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { CreateDebtDto } from './dto/create-debt.dto';
+import { CreateDebtDto } from '../../dto/create-debt.dto';
 
 describe('DebtsService', () => {
   let service: DebtsService;

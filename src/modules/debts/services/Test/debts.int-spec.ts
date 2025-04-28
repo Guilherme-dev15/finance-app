@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from '../../../src/app.module';
-import { Debt } from './schemas/debts.model';
+import { AppModule } from '../../../../app.module';
+import { Debt } from '../../schemas/debts.model';
 import { Model } from 'mongoose';
 import { getModelToken } from '@nestjs/mongoose';
 
